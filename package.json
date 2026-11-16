@@ -1,0 +1,21 @@
+{
+  "name": "trunfo",
+  "private": true,
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "concurrently -n api,web -c blue,green \"npm run dev -w @trunfo/api\" \"npm run dev -w @trunfo/web\"",
+    "dev:api": "npm run dev -w @trunfo/api",
+    "dev:web": "npm run dev -w @trunfo/web",
+    "build": "npm run build --workspaces --if-present",
+    "start": "concurrently -n api,web -c blue,green \"npm run start -w @trunfo/api\" \"npm run start -w @trunfo/web\"",
+    "lint": "npm run lint --workspaces --if-present"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
