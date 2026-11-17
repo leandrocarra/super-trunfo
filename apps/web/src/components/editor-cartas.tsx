@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState, useSyncExternalStore } from "react";
+import { useCallback, useRef, useState, useSyncExternalStore } from "react";
 import { BotaoImprimir } from "@/components/botao-imprimir";
 import { CartaForm } from "@/components/carta-form";
 import { CartaPreview } from "@/components/carta-preview";
@@ -71,6 +71,8 @@ export function EditorCartas() {
     codigo: "",
   }));
   const [erroSalvar, setErroSalvar] = useState<string | null>(null);
+  const [idsImpressao, setIdsImpressao] = useState<string[] | null>(null);
+  const cartaTopoRef = useRef<HTMLDivElement>(null);
   const rascunhoNaTela =
     rascunho.id === null && !codigoValido(rascunho.codigo)
       ? { ...rascunho, codigo: codigoNova }
@@ -89,6 +91,13 @@ export function EditorCartas() {
   const cartaValidada = rascunhoParaCarta(
     rascunho,
     rascunho.id ?? "rascunho",
+  );
+  const idsSalvas = cartas.map((carta) => carta.id);
+  const selecionadasImpressao = (idsImpressao ?? idsSalvas).filter((id) =>
+    idsSalvas.includes(id),
+  );
+  const cartasImpressao = cartas.filter((carta) =>
+    selecionadasImpressao.includes(carta.id),
   );
 
   function atualizarCampo(campo: Campo, valor: string) {
@@ -140,6 +149,9 @@ export function EditorCartas() {
       await persistirCartas(salvarCarta(cartas, carta));
       setErroSalvar(null);
       setRascunho(cartaParaRascunho(carta));
+      setIdsImpressao((atual) =>
+        atual === null || atual.includes(carta.id) ? atual : [...atual, carta.id],
+      );
     } catch (falha) {
       setErroSalvar(
         falha instanceof Error ? falha.message : "Não foi possível guardar as cartas",
@@ -153,6 +165,25 @@ export function EditorCartas() {
 
   function handleEditar(carta: Carta) {
     setRascunho(cartaParaRascunho(carta));
+    cartaTopoRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function alternarImpressao(id: string) {
+    setIdsImpressao((atual) => {
+      const base = new Set(atual ?? cartas.map((item) => item.id));
+
+      if (base.has(id)) {
+        base.delete(id);
+      } else {
+        base.add(id);
+      }
+
+      return [...base];
+    });
+  }
+
+  function marcarImpressao(marcar: boolean) {
+    setIdsImpressao(marcar ? cartas.map((carta) => carta.id) : []);
   }
 
   async function handleExcluir(id: string) {
@@ -163,6 +194,7 @@ export function EditorCartas() {
     try {
       await persistirCartas(removerCarta(cartas, id));
       setErroSalvar(null);
+      setIdsImpressao((atual) => atual?.filter((item) => item !== id) ?? null);
     } catch (falha) {
       setErroSalvar(
         falha instanceof Error ? falha.message : "Não foi possível guardar as cartas",
@@ -207,7 +239,10 @@ export function EditorCartas() {
                 <p className="text-base font-bold text-[#d62839]">{erroSalvar}</p>
               ) : null}
             </div>
-            <div className="flex justify-center lg:sticky lg:top-8 lg:justify-end">
+            <div
+              ref={cartaTopoRef}
+              className="flex scroll-mt-8 justify-center lg:sticky lg:top-8 lg:justify-end"
+            >
               <CartaPreview
                 rascunho={rascunhoNaTela}
                 onPosicaoImagem={atualizarPosicao}
@@ -220,19 +255,25 @@ export function EditorCartas() {
               <h2 className="text-2xl font-black text-[#3a0ca3]">
                 Minhas cartas
               </h2>
-              <BotaoImprimir quantidade={cartas.length} />
+              <BotaoImprimir
+                quantidade={cartasImpressao.length}
+                total={cartas.length}
+              />
             </div>
             <CartasSalvas
               cartas={cartas}
               carregando={!prontas}
               selecionadaId={rascunho.id}
+              idsImpressao={selecionadasImpressao}
               onEditar={handleEditar}
               onExcluir={handleExcluir}
+              onAlternarImpressao={alternarImpressao}
+              onMarcarImpressao={marcarImpressao}
             />
           </section>
         </main>
       </div>
-      <FolhaImpressao cartas={cartas} />
+      <FolhaImpressao cartas={cartasImpressao} />
     </>
   );
 }

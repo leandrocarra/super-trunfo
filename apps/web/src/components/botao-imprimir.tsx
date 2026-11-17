@@ -1,7 +1,19 @@
 import { CARTAS_POR_FOLHA, totalDeFolhas } from "@/lib/impressao";
 
-export function BotaoImprimir({ quantidade }: { quantidade: number }) {
+export function BotaoImprimir({
+  quantidade,
+  total,
+}: {
+  quantidade: number;
+  total: number;
+}) {
   const folhas = totalDeFolhas(quantidade);
+  const legenda =
+    total === 0
+      ? "Salve uma carta para poder imprimir."
+      : quantidade === 0
+        ? "Marque as cartas que você quer imprimir."
+        : `${quantidade} ${quantidade === 1 ? "carta" : "cartas"} em ${folhas} ${folhas === 1 ? "folha" : "folhas"} A4 (até ${CARTAS_POR_FOLHA} por folha, tamanho Pokémon 63 × 88 mm). Use escala 100%.`;
 
   return (
     <div className="flex flex-col items-start gap-1 sm:items-end sm:text-right">
@@ -17,13 +29,9 @@ export function BotaoImprimir({ quantidade }: { quantidade: number }) {
             d="M7 3h10v4H7V3zm-2 5h14a3 3 0 0 1 3 3v6h-4v4H6v-4H2v-6a3 3 0 0 1 3-3zm3 7v4h8v-4H8z"
           />
         </svg>
-        Imprimir minhas cartas
+        Imprimir cartas
       </button>
-      <p className="text-sm font-bold text-[#3a0ca3]/60">
-        {quantidade === 0
-          ? "Salve uma carta para poder imprimir."
-          : `${quantidade} ${quantidade === 1 ? "carta" : "cartas"} em ${folhas} ${folhas === 1 ? "folha" : "folhas"} A4 (até ${CARTAS_POR_FOLHA} por folha, tamanho Pokémon 63 × 88 mm). Use escala 100%.`}
-      </p>
+      <p className="text-sm font-bold text-[#3a0ca3]/60">{legenda}</p>
     </div>
   );
 }

@@ -17,16 +17,22 @@ type CartasSalvasProps = {
   cartas: Carta[];
   carregando: boolean;
   selecionadaId: string | null;
+  idsImpressao: string[];
   onEditar: (carta: Carta) => void;
   onExcluir: (id: string) => void;
+  onAlternarImpressao: (id: string) => void;
+  onMarcarImpressao: (marcar: boolean) => void;
 };
 
 export function CartasSalvas({
   cartas,
   carregando,
   selecionadaId,
+  idsImpressao,
   onEditar,
   onExcluir,
+  onAlternarImpressao,
+  onMarcarImpressao,
 }: CartasSalvasProps) {
   const [busca, setBusca] = useState("");
 
@@ -51,6 +57,7 @@ export function CartasSalvas({
     termo === ""
       ? cartas
       : cartas.filter((carta) => textoBusca(carta.nome).includes(termo));
+  const todasMarcadas = cartas.every((carta) => idsImpressao.includes(carta.id));
 
   return (
     <div className="flex flex-col gap-4">
@@ -65,6 +72,13 @@ export function CartasSalvas({
           onChange={(event) => setBusca(event.target.value)}
         />
       </label>
+      <button
+        type="button"
+        onClick={() => onMarcarImpressao(!todasMarcadas)}
+        className="h-12 self-start rounded-2xl border-4 border-[#ffd23f] bg-white px-5 text-lg font-black text-[#3a0ca3] transition-colors hover:bg-[#fff8e1]"
+      >
+        {todasMarcadas ? "Desmarcar todas" : "Marcar todas"}
+      </button>
       {visiveis.length === 0 ? (
         <p className="rounded-2xl bg-white/70 p-5 text-center text-lg font-bold text-[#3a0ca3]/60">
           Nenhuma carta com esse nome.
@@ -73,6 +87,7 @@ export function CartasSalvas({
     <ul className="grid gap-4 sm:grid-cols-2">
       {visiveis.map((carta) => {
         const selecionada = carta.id === selecionadaId;
+        const imprimir = idsImpressao.includes(carta.id);
 
         return (
           <li key={carta.id}>
@@ -133,6 +148,15 @@ export function CartasSalvas({
                   </span>
                 </span>
               </button>
+              <label className="flex cursor-pointer items-center gap-3 text-lg font-black text-[#3a0ca3]">
+                <input
+                  type="checkbox"
+                  className="h-6 w-6 accent-[#ff9f1c]"
+                  checked={imprimir}
+                  onChange={() => onAlternarImpressao(carta.id)}
+                />
+                Imprimir
+              </label>
               <div className="flex gap-3">
                 <button
                   type="button"
